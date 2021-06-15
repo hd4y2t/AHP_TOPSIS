@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Kriteria;
+use App\Alternatif;
+use App\Nilai_bobot_kriteria;
+use App\Nilai_bobot_alternatif;
+
+class Nilai_bobot_alternatifController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+	
+    public function index()
+    {
+		$data['kriteria'] = Kriteria::all();
+		$data['alternatif'] = Alternatif::all();
+		
+		$kode_kriteria = Kriteria::select('kode_kriteria')->orderBy('id', 'desc')->first();
+		$kode_alternatif = Alternatif::select('kode_alternatif')->orderBy('id', 'desc')->first();
+		
+		$kd_kriteria = substr($kode_kriteria->kode_kriteria,1,strlen($kode_kriteria->kode_kriteria)-1);
+		$kd_alternatif = substr($kode_alternatif->kode_alternatif,1,strlen($kode_alternatif->kode_alternatif)-1);
+		
+		$data['no'] = $kd_kriteria;
+		
+		for($i=1 ; $i<=$kd_alternatif ; $i++){
+			for($j=1 ; $j<=$kd_kriteria ; $j++){
+				$data_bobot[$i][$j] = Nilai_bobot_alternatif::select('bobot')->where('kode_alternatif','A'.$i)->where('kode_kriteria','C'.$j)->first();
+			}
+		}
+
+		$check_nilai_bobot_kriteria = Nilai_bobot_kriteria::get();
+		$check_nilai_bobot_alternatif = Nilai_bobot_alternatif::get();
+		$check_kriteria = Kriteria::get();
+		if (count($check_nilai_bobot_kriteria)) {
+			$data['check_nilai_bobot_kriteria'] = 1;
+		} else {
+			$data['check_nilai_bobot_kriteria'] = 0;
+		}
+		if (count($check_nilai_bobot_alternatif)) {
+			$data['check_nilai_bobot_alternatif'] = 1;
+		} else {
+			$data['check_nilai_bobot_alternatif'] = 0;
+		}
+		if (count($check_kriteria)) {
+			$data['check_kriteria'] = 1;
+		} else {
+			$data['check_kriteria'] = 0;
+		}
+		if(count($check_nilai_bobot_kriteria) > 1 && count($check_nilai_bobot_alternatif) > 1){
+			$data['perhitungan'] = 1;
+		  }else{
+			$data['perhitungan'] = 0;
+		  }
+
+        return view('nilai_bobot_alternatif', $data)->with('tampil' , $data_bobot);
+    }
+	public function ubah(){
+		$Nilai_bobot_alternatif = Nilai_bobot_alternatif::where('kode_alternatif',$_POST['baris'])->where('kode_kriteria',$_POST['kolom'])->update(['bobot' => $_POST['nilai']]);
+		return redirect('nilai_bobot_alternatif')->with('message', 'Data berhasil ditambah');
+	}
+}
